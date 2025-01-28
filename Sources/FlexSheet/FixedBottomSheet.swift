@@ -3,9 +3,9 @@
 //  FlexSheet
 //
 //  Created by 이지훈 on 1/28/25.
-//  Copyright © 2024 이지훈. All rights reserved.
 //
 
+import Foundation
 import SwiftUI
 
 public struct FixedBottomSheet<Content: View>: View {
@@ -26,9 +26,11 @@ public struct FixedBottomSheet<Content: View>: View {
                     .frame(maxWidth: .infinity)
             }
             .frame(height: height)
-            .background(.white)
+            .background(Color(.systemBackground))
             .cornerRadius(10, corners: [.topLeft, .topRight])
             .offset(y: geometry.size.height - height)
+            .accessibilityAddTraits(.isModal)
+            .accessibilityLabel("Bottom Sheet")
         }
         .ignoresSafeArea()
     }
@@ -37,11 +39,11 @@ public struct FixedBottomSheet<Content: View>: View {
     private var handleBar: some View {
         VStack(spacing: 8) {
             RoundedRectangle(cornerRadius: 3)
-                .fill(Color.gray)
+                .fill(Color(.systemGray3))
                 .frame(width: 24, height: 2)
                 .padding(.top, 10)
         }
         .frame(height: 40)
-        .background(.white)
+        .background(Color(.systemBackground))
     }
-} 
+}

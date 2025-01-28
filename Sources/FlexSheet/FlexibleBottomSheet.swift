@@ -3,7 +3,6 @@
 //  FlexSheet
 //
 //  Created by 이지훈 on 1/28/25.
-//  Copyright © 2024 이지훈. All rights reserved.
 //
 
 import SwiftUI
@@ -15,55 +14,74 @@ public struct FlexibleBottomSheet<Content: View>: View {
     @GestureState private var isDragging: Bool = false
     @State private var isScrollEnabled: Bool = false
     
-    public init(currentStyle: Binding<BottomSheetStyle>, @ViewBuilder content: () -> Content) {
+    public var animation: Animation = .spring(response: 0.3, dampingFraction: 0.7)
+    public var dragSensitivity: CGFloat = 500
+    
+    public init(currentStyle: Binding<BottomSheetStyle>,
+                animation: Animation = .spring(response: 0.3, dampingFraction: 0.7),
+                dragSensitivity: CGFloat = 500,
+                @ViewBuilder content: () -> Content) {
         self._currentStyle = currentStyle
+        self.animation = animation
+        self.dragSensitivity = dragSensitivity
         self.content = content()
     }
     
-    private func getClosestSnapPoint(to offset: CGFloat) -> BottomSheetStyle {
-        let screenHeight = UIScreen.main.bounds.height
+    private func getClosestSnapPoint(to offset: CGFloat, in geometry: GeometryProxy) -> BottomSheetStyle {
+        let screenHeight = geometry.size.height
         let currentHeight = screenHeight - offset
         
         let distances = [
-            (abs(currentHeight - BottomSheetStyle.minimal.height), BottomSheetStyle.minimal),
-            (abs(currentHeight - BottomSheetStyle.half.height), BottomSheetStyle.half),
-            (abs(currentHeight - BottomSheetStyle.full.height), BottomSheetStyle.full)
+            (abs(currentHeight - BottomSheetStyle.minimal.height(for: screenHeight)), BottomSheetStyle.minimal),
+            (abs(currentHeight - BottomSheetStyle.half.height(for: screenHeight)), BottomSheetStyle.half),
+            (abs(currentHeight - BottomSheetStyle.full.height(for: screenHeight)), BottomSheetStyle.full)
         ]
         
         return distances.min(by: { $0.0 < $1.0 })?.1 ?? .minimal
     }
     
     public var body: some View {
-        GeometryReader { _ in
+        GeometryReader { geometry in
             VStack(spacing: 0) {
                 handleBar
                 
                 ScrollView(showsIndicators: false) {
                     content
+                        .frame(maxWidth: .infinity)
                 }
                 .disabled(!isScrollEnabled)
             }
             .frame(maxHeight: .infinity)
-            .background(.white)
+            .background(Color(.systemBackground))
             .cornerRadius(10, corners: [.topLeft, .topRight])
-            .offset(y: UIScreen.main.bounds.height - currentStyle.height + offset)
-            .gesture(dragGesture)
+            .offset(y: geometry.size.height - currentStyle.height(for: geometry.size.height) + offset)
+            .gesture(dragGesture(in: geometry))
+            .accessibilityAddTraits(.isModal)
+            .accessibilityLabel("Bottom Sheet")
+            .onChange(of: currentStyle) { newStyle in
+                withAnimation(animation) {
+                    isScrollEnabled = (newStyle == .full)
+                }
+            }
+            .padding(.bottom, geometry.safeAreaInsets.bottom)
         }
+        .ignoresSafeArea()
     }
     
     @ViewBuilder
     private var handleBar: some View {
         VStack(spacing: 8) {
             RoundedRectangle(cornerRadius: 3)
-                .fill(Color.gray)
+                .fill(Color(.systemGray3))
                 .frame(width: 24, height: 2)
                 .padding(.top, 10)
+                .accessibilityHidden(true)
         }
         .frame(height: 40)
-        .background(.white)
+        .background(Color(.systemBackground))
     }
     
-    private var dragGesture: some Gesture {
+    private func dragGesture(in geometry: GeometryProxy) -> some Gesture {
         DragGesture()
             .updating($isDragging) { _, state, _ in
                 state = true
@@ -76,20 +94,22 @@ public struct FlexibleBottomSheet<Content: View>: View {
                 let translation = value.translation.height
                 let velocity = value.predictedEndTranslation.height - translation
                 
-                handleDragEnd(translation: translation, velocity: velocity)
+                handleDragEnd(translation: translation,
+                            velocity: velocity,
+                            in: geometry)
             }
     }
     
-    private func handleDragEnd(translation: CGFloat, velocity: CGFloat) {
-        if abs(velocity) > 500 {
+    private func handleDragEnd(translation: CGFloat, velocity: CGFloat, in geometry: GeometryProxy) {
+        if abs(velocity) > dragSensitivity {
             handleVelocityBasedSnap(velocity: velocity)
         } else {
-            let screenHeight = UIScreen.main.bounds.height
-            let currentOffset = screenHeight - currentStyle.height + translation
-            currentStyle = getClosestSnapPoint(to: currentOffset)
+            let screenHeight = geometry.size.height
+            let currentOffset = screenHeight - currentStyle.height(for: screenHeight) + translation
+            currentStyle = getClosestSnapPoint(to: currentOffset, in: geometry)
         }
         
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+        withAnimation(animation) {
             offset = 0
             isScrollEnabled = (currentStyle == .full)
         }
@@ -102,11 +122,13 @@ public struct FlexibleBottomSheet<Content: View>: View {
                 currentStyle = .half
             case .half:
                 currentStyle = .minimal
-            case .minimal: break
+            case .minimal:
+                break
             }
         } else {
             switch currentStyle {
-            case .full: break
+            case .full:
+                break
             case .half:
                 currentStyle = .full
             case .minimal:
@@ -114,4 +136,4 @@ public struct FlexibleBottomSheet<Content: View>: View {
             }
         }
     }
-} 
+}
