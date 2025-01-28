@@ -24,9 +24,7 @@ FlexSheet is a flexible and customizable bottom sheet library for SwiftUI that p
 Add the following to your `Package.swift` file:
 
 ```swift
-dependencies: [
-    .package(url: "https://github.com/hooni0918/FlexSheet.git", from: "1.0.0")
-]
+https://github.com/hooni0918/FlexSheet.git
 ```
 
 Or add it through Xcode:
