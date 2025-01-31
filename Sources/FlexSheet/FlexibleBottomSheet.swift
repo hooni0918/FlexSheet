@@ -16,6 +16,7 @@ public struct FlexibleBottomSheet<Content: View>: View {
     
     public var animation: Animation = .spring(response: 0.3, dampingFraction: 0.7)
     public var dragSensitivity: CGFloat = 500
+    public var allowHide: Bool = false 
     
     public init(currentStyle: Binding<BottomSheetStyle>,
                 animation: Animation = .spring(response: 0.3, dampingFraction: 0.7),
@@ -123,16 +124,22 @@ public struct FlexibleBottomSheet<Content: View>: View {
             case .half:
                 currentStyle = .minimal
             case .minimal:
+                if allowHide {
+                    currentStyle = .notShow
+                }
+            case .notShow:
                 break
             }
         } else {
             switch currentStyle {
-            case .full:
-                break
-            case .half:
-                currentStyle = .full
+            case .notShow:
+                currentStyle = .minimal
             case .minimal:
                 currentStyle = .half
+            case .half:
+                currentStyle = .full
+            case .full:
+                break
             }
         }
     }

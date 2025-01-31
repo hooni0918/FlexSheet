@@ -12,6 +12,7 @@ public enum BottomSheetStyle: Equatable {
     case full
     case half
     case minimal
+    case notShow
     
     public func height(for screenHeight: CGFloat) -> CGFloat {
         switch self {
@@ -21,6 +22,8 @@ public enum BottomSheetStyle: Equatable {
             return screenHeight * 0.5
         case .minimal:
             return screenHeight * 0.25
+        case .notShow:
+            return 0
         }
     }
 }
