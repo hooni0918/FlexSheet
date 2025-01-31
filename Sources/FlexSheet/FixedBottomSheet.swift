@@ -10,10 +10,13 @@ import SwiftUI
 
 public struct FixedBottomSheet<Content: View>: View {
     private let content: Content
-    private let height: CGFloat
+    private let style: FlexSheetStyle
     
-    public init(height: CGFloat, @ViewBuilder content: () -> Content) {
-        self.height = height
+    public init(
+        style: FlexSheetStyle = .defaultFixed,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.style = .defaultFixed
         self.content = content()
     }
     
@@ -25,12 +28,10 @@ public struct FixedBottomSheet<Content: View>: View {
                 content
                     .frame(maxWidth: .infinity)
             }
-            .frame(height: height)
+            .frame(height: style.fixedHeight)
             .background(Color(.systemBackground))
-            .cornerRadius(10, corners: [.topLeft, .topRight])
-            .offset(y: geometry.size.height - height)
-            .accessibilityAddTraits(.isModal)
-            .accessibilityLabel("Bottom Sheet")
+            .cornerRadius(FlexSheet.Constants.cornerRadius, corners: [.topLeft, .topRight])
+            .offset(y: geometry.size.height - style.fixedHeight)
         }
         .ignoresSafeArea()
     }

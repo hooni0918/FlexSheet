@@ -9,6 +9,7 @@ import SwiftUI
 
 public struct FlexibleBottomSheet<Content: View>: View {
     private let content: Content
+    private let sheetStyle: FlexSheetStyle
     @Binding private var currentStyle: BottomSheetStyle
     @State private var offset: CGFloat = 0
     @GestureState private var isDragging: Bool = false
@@ -20,9 +21,11 @@ public struct FlexibleBottomSheet<Content: View>: View {
     
     public init(currentStyle: Binding<BottomSheetStyle>,
                 animation: Animation = .spring(response: 0.3, dampingFraction: 0.7),
+                style: FlexSheetStyle = .defaultFlex,
                 dragSensitivity: CGFloat = 500,
                 @ViewBuilder content: () -> Content) {
         self._currentStyle = currentStyle
+        self.sheetStyle = style
         self.animation = animation
         self.dragSensitivity = dragSensitivity
         self.content = content()

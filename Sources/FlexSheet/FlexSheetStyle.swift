@@ -7,30 +7,49 @@
 
 import SwiftUI
 
-public struct FlexSheetStyle : Sendable {
+@MainActor
+public struct FlexSheetStyle {
     let animation: Animation
     let dragSensitivity: CGFloat
     let allowHide: Bool
+    let sheetSize: BottomSheetStyle
+    let fixedHeight: CGFloat
     
-    public static let `default` = FlexSheetStyle(
+    public static let defaultFlex = FlexSheetStyle(
         animation: .spring(response: 0.3, dampingFraction: 0.7),
         dragSensitivity: 500,
-        allowHide: false
+        allowHide: false,
+        sheetSize: .minimal,
+        fixedHeight: 0  // Flexible에서는 사용하지 않음
     )
     
-    public static let interactive = FlexSheetStyle(
+    public static let interactiveFlex = FlexSheetStyle(
         animation: .spring(response: 0.6, dampingFraction: 0.8, blendDuration: 0.8),
         dragSensitivity: 300,
-        allowHide: true
+        allowHide: true,
+        sheetSize: .minimal,
+        fixedHeight: 0  // Flexible에서는 사용하지 않음
+    )
+    
+    public static let defaultFixed = FlexSheetStyle(
+        animation: .spring(response: 0.3, dampingFraction: 0.7),
+        dragSensitivity: 500,
+        allowHide: false,
+        sheetSize: .notShow,  // Fixed에서는 사용하지 않음
+        fixedHeight: UIScreen.main.bounds.height * 0.4
     )
     
     public init(
         animation: Animation = .spring(response: 0.3, dampingFraction: 0.7),
         dragSensitivity: CGFloat = 500,
-        allowHide: Bool = false
+        allowHide: Bool = false,
+        sheetSize: BottomSheetStyle = .minimal,
+        fixedHeight: CGFloat = 0
     ) {
         self.animation = animation
         self.dragSensitivity = dragSensitivity
         self.allowHide = allowHide
+        self.sheetSize = sheetSize
+        self.fixedHeight = fixedHeight
     }
 }
