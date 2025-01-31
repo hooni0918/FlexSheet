@@ -116,7 +116,7 @@ FlexibleBottomSheet(
 
 ## Requirements
 
-- iOS 14.0+
+- iOS 15.0+
 - Swift 6.0+
 - Xcode 15.0+
 
