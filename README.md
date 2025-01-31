@@ -15,7 +15,7 @@ FlexSheet is a flexible and customizable bottom sheet library for SwiftUI that p
 - 🎨 Customizable appearance
 - 🔄 Gesture-based interactions
 - ♿️ Accessibility support
-- 📱 iOS 14.0+ support
+- 📱 iOS 15.0+ support
 
 ## Installation
 
