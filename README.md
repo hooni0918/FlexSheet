@@ -98,6 +98,7 @@ The FlexibleBottomSheet supports three different heights:
 - `.full` - 90% of screen height
 - `.half` - 50% of screen height
 - `.minimal` - 25% of screen height
+- `.notShow` - Completely hidden (0% height)
 
 ### Customization
 
