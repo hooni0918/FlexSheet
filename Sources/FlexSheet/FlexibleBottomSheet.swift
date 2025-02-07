@@ -46,7 +46,9 @@ public struct FlexibleBottomSheet<Content: View>: View {
     public var body: some View {
         GeometryReader { geometry in
             VStack(spacing: 0) {
-                handleBar
+                if sheetStyle.handleBarVisible {
+                    handleBar
+                }
                 
                 ScrollView(showsIndicators: false) {
                     content
@@ -96,8 +98,8 @@ public struct FlexibleBottomSheet<Content: View>: View {
                 let velocity = value.predictedEndTranslation.height - translation
                 
                 handleDragEnd(translation: translation,
-                            velocity: velocity,
-                            in: geometry)
+                              velocity: velocity,
+                              in: geometry)
             }
     }
     

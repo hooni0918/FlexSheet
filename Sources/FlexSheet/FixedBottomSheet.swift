@@ -10,28 +10,29 @@ import SwiftUI
 
 public struct FixedBottomSheet<Content: View>: View {
     private let content: Content
-    private let style: FlexSheetStyle
+    private let sheetStyle: FlexSheetStyle
     
     public init(
         style: FlexSheetStyle = .defaultFixed,
         @ViewBuilder content: () -> Content
     ) {
-        self.style = .defaultFixed
+        self.sheetStyle = .defaultFixed
         self.content = content()
     }
     
     public var body: some View {
         GeometryReader { geometry in
             VStack(spacing: 0) {
-                handleBar
-                
+                if sheetStyle.handleBarVisible {
+                    handleBar
+                }
                 content
                     .frame(maxWidth: .infinity)
             }
-            .frame(height: style.fixedHeight)
+            .frame(height: sheetStyle.fixedHeight)
             .background(Color(.systemBackground))
             .cornerRadius(FlexSheet.Constants.cornerRadius, corners: [.topLeft, .topRight])
-            .offset(y: geometry.size.height - style.fixedHeight)
+            .offset(y: geometry.size.height - sheetStyle.fixedHeight)
         }
         .ignoresSafeArea()
     }
