@@ -11,14 +11,10 @@ public struct FlexibleBottomSheet<Content: View>: View {
     private let content: Content
     private let sheetStyle: FlexSheetStyle
     @Binding private var currentStyle: BottomSheetStyle
-    @State private var offset: CGFloat = 0
-    @GestureState private var isDragging: Bool = false
-    @State private var isScrollEnabled: Bool = false
     @State private var draggedHeight: CGFloat = 0
     @State private var isDraggingHeader: Bool = false
-    
-    public var dragSensitivity: CGFloat = 500
-    public var allowHide: Bool = false
+    @State private var scrollOffset: CGFloat = 0
+    @State private var isExpanding: Bool = false
     
     public init(
         currentStyle: Binding<BottomSheetStyle>,
@@ -28,7 +24,6 @@ public struct FlexibleBottomSheet<Content: View>: View {
     ) {
         self._currentStyle = currentStyle
         self.sheetStyle = style
-        self.dragSensitivity = dragSensitivity
         self.content = content()
     }
     
@@ -46,90 +41,82 @@ public struct FlexibleBottomSheet<Content: View>: View {
     }
     
     public var body: some View {
-            GeometryReader { geometry in
-                VStack(spacing: 0) {
-                    // 드래그 영역으로 사용할 헤더
-                    Color.clear
-                        .frame(height: 60) // 드래그 가능한 영역의 높이
-                        .contentShape(Rectangle())
-                        .gesture(
-                            DragGesture()
-                                .onChanged { value in
-                                    isDraggingHeader = true
-                                    let translation = value.translation.height
-                                    draggedHeight = (currentStyle == .full && translation < 0) ? 0 : translation
-                                }
-                                .onEnded { value in
-                                    isDraggingHeader = false
-                                    let translation = value.translation.height
-                                    let velocity = value.predictedEndTranslation.height - translation
-                                    
-                                    handleDragEnd(translation: translation,
-                                                velocity: velocity,
-                                                in: geometry)
-                                    draggedHeight = 0
-                                }
-                        )
-                    
+        GeometryReader { geometry in
+            VStack(spacing: 0) {
+                Color.clear
+                    .frame(height: 40)
+                    .contentShape(Rectangle())
+                    .gesture(
+                        DragGesture()
+                            .onChanged { value in
+                                isDraggingHeader = true
+                                let translation = value.translation.height
+                                draggedHeight = (currentStyle == .full && translation < 0) ? 0 : translation
+                            }
+                            .onEnded { value in
+                                isDraggingHeader = false
+                                handleDragEnd(translation: value.translation.height,
+                                            velocity: value.predictedEndTranslation.height - value.translation.height,
+                                            in: geometry)
+                                draggedHeight = 0
+                            }
+                    )
+                
+                ScrollViewReader { proxy in
                     ScrollView(showsIndicators: false) {
-                        content
-                            .frame(maxWidth: .infinity)
+                        VStack(spacing: 0) {
+                            GeometryReader { scrollGeometry in
+                                Color.clear.preference(
+                                    key: ScrollOffsetPreferenceKey.self,
+                                    value: scrollGeometry.frame(in: .named("scroll")).minY
+                                )
+                            }
+                            .frame(height: 0)
+                            
+                            content
+                                .frame(maxWidth: .infinity)
+                        }
                     }
-                    .disabled(!isScrollEnabled || isDraggingHeader)
+                    .coordinateSpace(name: "scroll")
+                    .onPreferenceChange(ScrollOffsetPreferenceKey.self) { offset in
+                        handleScrollOffset(offset, in: geometry)
+                    }
                 }
-                .frame(maxHeight: .infinity)
-                .background(Color(.systemBackground))
-                .cornerRadius(FlexSheet.Constants.cornerRadius, corners: [.topLeft, .topRight])
-                .offset(y: geometry.size.height - currentStyle.height(for: geometry.size.height) + draggedHeight)
-                .animation(.spring(response: 0.3, dampingFraction: 0.7), value: currentStyle)
-                .animation(.spring(response: 0.3, dampingFraction: 0.7), value: draggedHeight)
+                .disabled(isDraggingHeader)
             }
-            .ignoresSafeArea()
+            .frame(maxHeight: .infinity)
+            .background(Color(.systemBackground))
+            .cornerRadius(FlexSheet.Constants.cornerRadius, corners: [.topLeft, .topRight])
+            .offset(y: geometry.size.height - currentStyle.height(for: geometry.size.height) + draggedHeight)
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: currentStyle)
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: draggedHeight)
         }
-        
-    
-    @ViewBuilder
-    private var handleBar: some View {
-        VStack(spacing: 8) {
-            RoundedRectangle(cornerRadius: 3)
-                .fill(Color(.systemGray3))
-                .frame(width: 24, height: 2)
-                .padding(.top, 10)
-        }
-        .frame(height: 40)
-        .background(Color(.systemBackground))
+        .ignoresSafeArea()
     }
     
-    private func dragGesture(in geometry: GeometryProxy) -> some Gesture {
-        DragGesture()
-            .updating($isDragging) { _, state, _ in
-                state = true
-            }
-            .onChanged { value in
-                let translation = value.translation.height
-                offset = (currentStyle == .full && translation < 0) ? 0 : translation
-            }
-            .onEnded { value in
-                let translation = value.translation.height
-                let velocity = value.predictedEndTranslation.height - translation
-                
-                handleDragEnd(translation: translation,
-                              velocity: velocity,
-                              in: geometry)
-            }
+    private func handleScrollOffset(_ offset: CGFloat, in geometry: GeometryProxy) {
+        // 스크롤이 위로 올라갈 때 (offset이 음수)
+        if offset < -20 && currentStyle != .full && !isExpanding {
+            isExpanding = true
+            currentStyle = .full
+        }
+        // 스크롤이 맨 위에 있고 아래로 당길 때 (offset이 양수)
+        else if offset > 20 && currentStyle == .full {
+            currentStyle = .minimal
+            isExpanding = false
+        }
+        
+        scrollOffset = offset
     }
     
     private func handleDragEnd(translation: CGFloat, velocity: CGFloat, in geometry: GeometryProxy) {
-        if abs(velocity) > dragSensitivity {
+        if abs(velocity) > sheetStyle.dragSensitivity {
             handleVelocityBasedSnap(velocity: velocity)
         } else {
             let screenHeight = geometry.size.height
             let currentOffset = screenHeight - currentStyle.height(for: screenHeight) + translation
             currentStyle = getClosestSnapPoint(to: currentOffset, in: geometry)
         }
-        
-        offset = 0
-        isScrollEnabled = (currentStyle == .full)
     }
     
     private func handleVelocityBasedSnap(velocity: CGFloat) {
@@ -140,7 +127,7 @@ public struct FlexibleBottomSheet<Content: View>: View {
             case .half:
                 currentStyle = .minimal
             case .minimal:
-                if allowHide {
+                if sheetStyle.allowHide {
                     currentStyle = .notShow
                 }
             case .notShow:
@@ -158,5 +145,13 @@ public struct FlexibleBottomSheet<Content: View>: View {
                 break
             }
         }
+    }
+}
+
+private struct ScrollOffsetPreferenceKey: @preconcurrency PreferenceKey {
+    @MainActor static var defaultValue: CGFloat = 0
+    
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
     }
 }
