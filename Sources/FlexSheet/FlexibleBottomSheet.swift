@@ -14,6 +14,8 @@ public struct FlexibleBottomSheet<Content: View>: View {
     @State private var offset: CGFloat = 0
     @GestureState private var isDragging: Bool = false
     @State private var isScrollEnabled: Bool = false
+    @State private var draggedHeight: CGFloat = 0
+    @State private var isDraggingHeader: Bool = false
     
     public var dragSensitivity: CGFloat = 500
     public var allowHide: Bool = false
@@ -44,33 +46,47 @@ public struct FlexibleBottomSheet<Content: View>: View {
     }
     
     public var body: some View {
-        GeometryReader { geometry in
-            VStack(spacing: 0) {
-                if sheetStyle.handleBarVisible {
-                    handleBar
+            GeometryReader { geometry in
+                VStack(spacing: 0) {
+                    // 드래그 영역으로 사용할 헤더
+                    Color.clear
+                        .frame(height: 60) // 드래그 가능한 영역의 높이
+                        .contentShape(Rectangle())
+                        .gesture(
+                            DragGesture()
+                                .onChanged { value in
+                                    isDraggingHeader = true
+                                    let translation = value.translation.height
+                                    draggedHeight = (currentStyle == .full && translation < 0) ? 0 : translation
+                                }
+                                .onEnded { value in
+                                    isDraggingHeader = false
+                                    let translation = value.translation.height
+                                    let velocity = value.predictedEndTranslation.height - translation
+                                    
+                                    handleDragEnd(translation: translation,
+                                                velocity: velocity,
+                                                in: geometry)
+                                    draggedHeight = 0
+                                }
+                        )
+                    
+                    ScrollView(showsIndicators: false) {
+                        content
+                            .frame(maxWidth: .infinity)
+                    }
+                    .disabled(!isScrollEnabled || isDraggingHeader)
                 }
-                
-                ScrollView(showsIndicators: false) {
-                    content
-                        .frame(maxWidth: .infinity)
-                }
-                .disabled(!isScrollEnabled)
+                .frame(maxHeight: .infinity)
+                .background(Color(.systemBackground))
+                .cornerRadius(FlexSheet.Constants.cornerRadius, corners: [.topLeft, .topRight])
+                .offset(y: geometry.size.height - currentStyle.height(for: geometry.size.height) + draggedHeight)
+                .animation(.spring(response: 0.3, dampingFraction: 0.7), value: currentStyle)
+                .animation(.spring(response: 0.3, dampingFraction: 0.7), value: draggedHeight)
             }
-            .frame(maxHeight: .infinity)
-            .background(Color(.systemBackground))
-            .cornerRadius(FlexSheet.Constants.cornerRadius, corners: [.topLeft, .topRight])
-            .offset(y: geometry.size.height - currentStyle.height(for: geometry.size.height) + offset)
-            .gesture(dragGesture(in: geometry))
-            .accessibilityAddTraits(.isModal)
-            .accessibilityLabel("Bottom Sheet")
-            .onChange(of: currentStyle) { newStyle in
-                isScrollEnabled = (newStyle == .full)
-            }
-            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: currentStyle)
-            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: offset)
+            .ignoresSafeArea()
         }
-        .ignoresSafeArea()
-    }
+        
     
     @ViewBuilder
     private var handleBar: some View {
