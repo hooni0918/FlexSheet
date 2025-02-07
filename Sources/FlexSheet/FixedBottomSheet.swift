@@ -16,7 +16,7 @@ public struct FixedBottomSheet<Content: View>: View {
         style: FlexSheetStyle = .defaultFixed,
         @ViewBuilder content: () -> Content
     ) {
-        self.sheetStyle = .defaultFixed
+        self.sheetStyle = style
         self.content = content()
     }
     
