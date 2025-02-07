@@ -14,6 +14,7 @@ public struct FlexibleBottomSheet<Content: View>: View {
     @State private var draggedHeight: CGFloat = 0
     @State private var isDraggingHeader: Bool = false
     @State private var scrollOffset: CGFloat = 0
+    @State private var lastContentOffset: CGFloat = 0
     @State private var isExpanding: Bool = false
     
     public init(
@@ -32,12 +33,11 @@ public struct FlexibleBottomSheet<Content: View>: View {
         let currentHeight = screenHeight - offset
         
         let distances = [
-            (abs(currentHeight - BottomSheetStyle.minimal.height(for: screenHeight)), BottomSheetStyle.minimal),
             (abs(currentHeight - BottomSheetStyle.half.height(for: screenHeight)), BottomSheetStyle.half),
             (abs(currentHeight - BottomSheetStyle.full.height(for: screenHeight)), BottomSheetStyle.full)
         ]
         
-        return distances.min(by: { $0.0 < $1.0 })?.1 ?? .minimal
+        return distances.min(by: { $0.0 < $1.0 })?.1 ?? .half
     }
     
     public var body: some View {
@@ -95,17 +95,25 @@ public struct FlexibleBottomSheet<Content: View>: View {
     }
     
     private func handleScrollOffset(_ offset: CGFloat, in geometry: GeometryProxy) {
-        // 스크롤이 위로 올라갈 때 (offset이 음수)
-        if offset < -20 && currentStyle != .full && !isExpanding {
+        // 스크롤 방향 감지 및 상태 전환
+        let scrollDirection = offset - lastContentOffset
+        
+        // half 상태에서 위로 스크롤할 때
+        if currentStyle == .half && scrollDirection < -20 && !isExpanding {
             isExpanding = true
-            currentStyle = .full
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                currentStyle = .full
+            }
         }
-        // 스크롤이 맨 위에 있고 아래로 당길 때 (offset이 양수)
-        else if offset > 20 && currentStyle == .full {
-            currentStyle = .minimal
+        // full 상태에서 첫 번째 아이템에서 아래로 스크롤할 때
+        else if currentStyle == .full && offset > 20 {
             isExpanding = false
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                currentStyle = .half
+            }
         }
         
+        lastContentOffset = offset
         scrollOffset = offset
     }
     
