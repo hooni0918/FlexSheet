@@ -1,6 +1,21 @@
+
 # FlexSheet
 
 FlexSheet is a flexible and customizable bottom sheet library for SwiftUI that provides both fixed and dynamic height bottom sheets with smooth animations and gesture interactions.
+
+## Demo
+
+# FlexSheet
+
+FlexSheet is a flexible and customizable bottom sheet library for SwiftUI that provides both fixed and dynamic height bottom sheets with smooth animations and gesture interactions.
+
+## Demo
+
+| Flexible Bottom Sheet | Fixed Bottom Sheet |
+|:---:|:---:|
+| <img src="https://github.com/user-attachments/assets/6085e733-df9e-4b7c-a74a-7cc0d67e77ae" width="200"> | <img src="https://github.com/user-attachments/assets/5afc30ec-237a-46b2-b699-730c6077b0e1" width="200"> |
+| Features multiple snap points (90%, 50%, 25%) with smooth gesture interactions | Maintains constant height with spring animations |
+
 
 ![iOS](https://img.shields.io/badge/iOS-15.0%2B-blue)
 ![Swift](https://img.shields.io/badge/Swift-6.0-orange)
