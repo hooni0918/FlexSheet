@@ -15,8 +15,7 @@ public struct FlexibleBottomSheet<Content: View>: View {
     @GestureState private var isDragging: Bool = false
     @State private var isScrollEnabled: Bool = false
     
-    public var dragSensitivity: CGFloat = 500 // 기본값 500으로 변경
-    public var animation: Animation = .spring(response: 0.3, dampingFraction: 0.7) // 애니메이션 값 조정
+    public var dragSensitivity: CGFloat = 500
     public var allowHide: Bool = false
     
     public init(
@@ -53,7 +52,7 @@ public struct FlexibleBottomSheet<Content: View>: View {
                     content
                         .frame(maxWidth: .infinity)
                 }
-                .disabled(!isScrollEnabled) 
+                .disabled(!isScrollEnabled)
             }
             .frame(maxHeight: .infinity)
             .background(Color(.systemBackground))
@@ -63,10 +62,10 @@ public struct FlexibleBottomSheet<Content: View>: View {
             .accessibilityAddTraits(.isModal)
             .accessibilityLabel("Bottom Sheet")
             .onChange(of: currentStyle) { newStyle in
-                withAnimation(animation) {
-                    isScrollEnabled = (newStyle == .full)
-                }
+                isScrollEnabled = (newStyle == .full)
             }
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: currentStyle)
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: offset)
         }
         .ignoresSafeArea()
     }
@@ -111,10 +110,8 @@ public struct FlexibleBottomSheet<Content: View>: View {
             currentStyle = getClosestSnapPoint(to: currentOffset, in: geometry)
         }
         
-        withAnimation(animation) {
-            offset = 0
-            isScrollEnabled = (currentStyle == .full)
-        }
+        offset = 0
+        isScrollEnabled = (currentStyle == .full)
     }
     
     private func handleVelocityBasedSnap(velocity: CGFloat) {
