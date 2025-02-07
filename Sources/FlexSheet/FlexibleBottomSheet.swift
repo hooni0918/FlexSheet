@@ -15,18 +15,18 @@ public struct FlexibleBottomSheet<Content: View>: View {
     @GestureState private var isDragging: Bool = false
     @State private var isScrollEnabled: Bool = false
     
-    public var animation: Animation = .spring(response: 0.3, dampingFraction: 0.7)
-    public var dragSensitivity: CGFloat = 500
-    public var allowHide: Bool = false 
+    public var dragSensitivity: CGFloat = 500 // 기본값 500으로 변경
+    public var animation: Animation = .spring(response: 0.3, dampingFraction: 0.7) // 애니메이션 값 조정
+    public var allowHide: Bool = false
     
-    public init(currentStyle: Binding<BottomSheetStyle>,
-                animation: Animation = .spring(response: 0.3, dampingFraction: 0.7),
-                style: FlexSheetStyle = .defaultFlex,
-                dragSensitivity: CGFloat = 500,
-                @ViewBuilder content: () -> Content) {
+    public init(
+        currentStyle: Binding<BottomSheetStyle>,
+        style: FlexSheetStyle = .defaultFlex,
+        dragSensitivity: CGFloat = 500,
+        @ViewBuilder content: () -> Content
+    ) {
         self._currentStyle = currentStyle
         self.sheetStyle = style
-        self.animation = animation
         self.dragSensitivity = dragSensitivity
         self.content = content()
     }
@@ -53,11 +53,11 @@ public struct FlexibleBottomSheet<Content: View>: View {
                     content
                         .frame(maxWidth: .infinity)
                 }
-                .disabled(!isScrollEnabled)
+                .disabled(!isScrollEnabled) 
             }
             .frame(maxHeight: .infinity)
             .background(Color(.systemBackground))
-            .cornerRadius(10, corners: [.topLeft, .topRight])
+            .cornerRadius(FlexSheet.Constants.cornerRadius, corners: [.topLeft, .topRight])
             .offset(y: geometry.size.height - currentStyle.height(for: geometry.size.height) + offset)
             .gesture(dragGesture(in: geometry))
             .accessibilityAddTraits(.isModal)
@@ -67,7 +67,6 @@ public struct FlexibleBottomSheet<Content: View>: View {
                     isScrollEnabled = (newStyle == .full)
                 }
             }
-            .padding(.bottom, geometry.safeAreaInsets.bottom)
         }
         .ignoresSafeArea()
     }
@@ -79,7 +78,6 @@ public struct FlexibleBottomSheet<Content: View>: View {
                 .fill(Color(.systemGray3))
                 .frame(width: 24, height: 2)
                 .padding(.top, 10)
-                .accessibilityHidden(true)
         }
         .frame(height: 40)
         .background(Color(.systemBackground))
