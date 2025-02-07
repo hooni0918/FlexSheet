@@ -22,7 +22,7 @@ public struct FlexSheetStyle {
         allowHide: false,
         sheetSize: .minimal,
         fixedHeight: 0,
-        handleBarVisible: true
+        handleBarVisible: false
     )
     
     public static let interactiveFlex = FlexSheetStyle(
@@ -31,16 +31,16 @@ public struct FlexSheetStyle {
         allowHide: true,
         sheetSize: .minimal,
         fixedHeight: 0,
-        handleBarVisible: true
+        handleBarVisible: false
     )
     
     public static let defaultFixed = FlexSheetStyle(
         animation: .spring(response: 0.3, dampingFraction: 0.7),
         dragSensitivity: 500,
         allowHide: false,
-        sheetSize: .notShow,  // Fixed에서는 사용하지 않음
+        sheetSize: .notShow, 
         fixedHeight: UIScreen.main.bounds.height * 0.4,
-        handleBarVisible: true
+        handleBarVisible: false
     )
     
     public init(
@@ -49,7 +49,7 @@ public struct FlexSheetStyle {
         allowHide: Bool = false,
         sheetSize: BottomSheetStyle = .minimal,
         fixedHeight: CGFloat = 0,
-        handleBarVisible: Bool = true
+        handleBarVisible: Bool = false
     ) {
         self.animation = animation
         self.dragSensitivity = dragSensitivity
