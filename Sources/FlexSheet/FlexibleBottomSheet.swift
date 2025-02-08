@@ -7,8 +7,7 @@
 
 import SwiftUI
 
-public struct FlexibleBottomSheet<Header: View, Content: View>: View {
-    private let header: Header
+public struct FlexibleBottomSheet<Content: View>: View {
     private let content: Content
     private let sheetStyle: FlexSheetStyle
     @Binding private var currentStyle: BottomSheetStyle
@@ -21,12 +20,10 @@ public struct FlexibleBottomSheet<Header: View, Content: View>: View {
     public init(
         currentStyle: Binding<BottomSheetStyle>,
         style: FlexSheetStyle = .defaultFlex,
-        @ViewBuilder header: () -> Header,
         @ViewBuilder content: () -> Content
     ) {
         self._currentStyle = currentStyle
         self.sheetStyle = style
-        self.header = header()
         self.content = content()
     }
     
@@ -45,11 +42,8 @@ public struct FlexibleBottomSheet<Header: View, Content: View>: View {
     public var body: some View {
         GeometryReader { geometry in
             VStack(spacing: 0) {
-                // 헤더 영역
-                header
-                    .frame(height: 60)
-                    .frame(maxWidth: .infinity)
-                    .background(Color(.systemBackground))
+                Color.clear
+                    .frame(height: 40)
                     .contentShape(Rectangle())
                     .gesture(
                         DragGesture()
@@ -67,7 +61,6 @@ public struct FlexibleBottomSheet<Header: View, Content: View>: View {
                             }
                     )
                 
-                // 스크롤 영역
                 ScrollViewReader { proxy in
                     ScrollView(showsIndicators: false) {
                         VStack(spacing: 0) {

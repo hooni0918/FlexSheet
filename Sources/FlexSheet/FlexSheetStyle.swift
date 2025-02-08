@@ -38,7 +38,7 @@ public struct FlexSheetStyle {
         animation: .spring(response: 0.3, dampingFraction: 0.7),
         dragSensitivity: 500,
         allowHide: false,
-        sheetSize: .notShow, 
+        sheetSize: .notShow,
         fixedHeight: UIScreen.main.bounds.height * 0.4,
         handleBarVisible: false
     )
