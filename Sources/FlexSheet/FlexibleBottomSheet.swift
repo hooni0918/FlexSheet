@@ -42,9 +42,8 @@ public struct FlexibleBottomSheet<Content: View>: View {
     public var body: some View {
         GeometryReader { geometry in
             VStack(spacing: 0) {
-                Color.clear
-                    .frame(height: 40)
-                    .contentShape(Rectangle())
+                content
+                    .frame(maxWidth: .infinity)
                     .gesture(
                         DragGesture()
                             .onChanged { value in
@@ -60,28 +59,6 @@ public struct FlexibleBottomSheet<Content: View>: View {
                                 draggedHeight = 0
                             }
                     )
-                
-                ScrollViewReader { proxy in
-                    ScrollView(showsIndicators: false) {
-                        VStack(spacing: 0) {
-                            GeometryReader { scrollGeometry in
-                                Color.clear.preference(
-                                    key: ScrollOffsetPreferenceKey.self,
-                                    value: scrollGeometry.frame(in: .named("scroll")).minY
-                                )
-                            }
-                            .frame(height: 0)
-                            
-                            content
-                                .frame(maxWidth: .infinity)
-                        }
-                    }
-                    .coordinateSpace(name: "scroll")
-                    .onPreferenceChange(ScrollOffsetPreferenceKey.self) { offset in
-                        handleScrollOffset(offset, in: geometry)
-                    }
-                }
-                .disabled(isDraggingHeader)
             }
             .frame(maxHeight: .infinity)
             .background(Color(.systemBackground))
