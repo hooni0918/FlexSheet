@@ -66,8 +66,27 @@ public struct FlexibleBottomSheet<Content: View>: View {
                                 }
                         )
                     
-                    content
-                        .frame(maxWidth: .infinity)
+                    ScrollViewReader { proxy in
+                        ScrollView(showsIndicators: false) {
+                            VStack(spacing: 0) {
+                                GeometryReader { scrollGeometry in
+                                    Color.clear.preference(
+                                        key: ScrollOffsetPreferenceKey.self,
+                                        value: scrollGeometry.frame(in: .named("scroll")).minY
+                                    )
+                                }
+                                .frame(height: 0)
+                                
+                                content
+                                    .frame(maxWidth: .infinity)
+                            }
+                        }
+                        .coordinateSpace(name: "scroll")
+                        .onPreferenceChange(ScrollOffsetPreferenceKey.self) { offset in
+                            handleScrollOffset(offset, in: geometry)
+                        }
+                        .disabled(isDraggingHeader)
+                    }
                 }
             }
             .frame(maxHeight: .infinity)
@@ -96,6 +115,26 @@ public struct FlexibleBottomSheet<Content: View>: View {
         .ignoresSafeArea()
     }
     
+    private func handleScrollOffset(_ offset: CGFloat, in geometry: GeometryProxy) {
+        let scrollDirection = offset - lastContentOffset
+        
+        if currentStyle == .half && scrollDirection < -20 && !isExpanding {
+            isExpanding = true
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                currentStyle = .full
+            }
+        }
+        else if currentStyle == .full && offset > 20 {
+            isExpanding = false
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                currentStyle = .half
+            }
+        }
+        
+        lastContentOffset = offset
+        scrollOffset = offset
+    }
+    
     private func handleDragEnd(translation: CGFloat, velocity: CGFloat, in geometry: GeometryProxy) {
         if abs(velocity) > sheetStyle.dragSensitivity {
             handleVelocityBasedSnap(velocity: velocity)
@@ -107,7 +146,7 @@ public struct FlexibleBottomSheet<Content: View>: View {
     }
     
     private func handleVelocityBasedSnap(velocity: CGFloat) {
-        if velocity > 0 {  // 아래로 드래그
+        if velocity > 0 {
             switch currentStyle {
             case .full:
                 currentStyle = .half
@@ -120,7 +159,7 @@ public struct FlexibleBottomSheet<Content: View>: View {
             case .notShow:
                 break
             }
-        } else {  // 위로 드래그
+        } else {
             switch currentStyle {
             case .notShow:
                 currentStyle = .minimal
@@ -134,6 +173,7 @@ public struct FlexibleBottomSheet<Content: View>: View {
         }
     }
 }
+
 @MainActor
 private struct ScrollOffsetPreferenceKey: @preconcurrency PreferenceKey {
     static var defaultValue: CGFloat = 0
