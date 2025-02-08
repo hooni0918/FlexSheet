@@ -17,14 +17,15 @@ public enum BottomSheetStyle: Equatable {
     public func height(for screenHeight: CGFloat) -> CGFloat {
         let itemHeight: CGFloat = 120
         let headerHeight: CGFloat = 60
+        let additionalHeight: CGFloat = 80
         
         switch self {
         case .full:
             return screenHeight * 0.876
         case .half:
-            return (itemHeight * 2) + headerHeight // 2개 아이템 + 헤더
+            return (itemHeight * 2) + headerHeight + additionalHeight
         case .minimal:
-            return headerHeight // 헤더만
+            return headerHeight
         case .notShow:
             return 0
         }
