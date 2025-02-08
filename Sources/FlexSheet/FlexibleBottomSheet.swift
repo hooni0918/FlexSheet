@@ -32,7 +32,6 @@ public struct FlexibleBottomSheet<Content: View>: View {
         let currentHeight = screenHeight - offset
         
         let distances = [
-            (abs(currentHeight - BottomSheetStyle.minimal.height(for: screenHeight)), BottomSheetStyle.minimal),
             (abs(currentHeight - BottomSheetStyle.half.height(for: screenHeight)), BottomSheetStyle.half),
             (abs(currentHeight - BottomSheetStyle.full.height(for: screenHeight)), BottomSheetStyle.full)
         ]
@@ -43,28 +42,6 @@ public struct FlexibleBottomSheet<Content: View>: View {
     public var body: some View {
         GeometryReader { geometry in
             VStack(spacing: 0) {
-                Color.clear
-                    .frame(height: 40)
-                    .contentShape(Rectangle())
-                    .gesture(
-                        DragGesture()
-                            .onChanged { value in
-                                isDraggingHeader = true
-                                let translation = value.translation.height
-                                draggedHeight = translation
-                            }
-                            .onEnded { value in
-                                isDraggingHeader = false
-                                let velocity = value.predictedEndTranslation.height - value.translation.height
-                                handleDragEnd(
-                                    translation: value.translation.height,
-                                    velocity: velocity,
-                                    in: geometry
-                                )
-                                draggedHeight = 0
-                            }
-                    )
-                
                 content
                     .frame(maxWidth: .infinity)
             }
@@ -119,7 +96,7 @@ public struct FlexibleBottomSheet<Content: View>: View {
             handleVelocityBasedSnap(velocity: velocity)
         } else {
             let screenHeight = geometry.size.height
-            let currentOffset = screenHeight - currentStyle.height(for: geometry.size.height) + translation
+            let currentOffset = screenHeight - currentStyle.height(for: screenHeight) + translation
             currentStyle = getClosestSnapPoint(to: currentOffset, in: geometry)
         }
     }
