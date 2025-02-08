@@ -12,7 +12,10 @@ public struct FlexibleBottomSheet<Content: View>: View {
     private let sheetStyle: FlexSheetStyle
     @Binding private var currentStyle: BottomSheetStyle
     @State private var draggedHeight: CGFloat = 0
-    @State private var isDragging: Bool = false
+    @State private var isDraggingHeader: Bool = false
+    @State private var scrollOffset: CGFloat = 0
+    @State private var lastContentOffset: CGFloat = 0
+    @State private var isExpanding: Bool = false
     
     public init(
         currentStyle: Binding<BottomSheetStyle>,
@@ -22,44 +25,6 @@ public struct FlexibleBottomSheet<Content: View>: View {
         self._currentStyle = currentStyle
         self.sheetStyle = style
         self.content = content()
-    }
-    
-    public var body: some View {
-        GeometryReader { geometry in
-            VStack(spacing: 0) {
-                Color.clear
-                    .frame(height: 40)
-                    .contentShape(Rectangle())
-                    .gesture(
-                        DragGesture()
-                            .onChanged { value in
-                                isDragging = true
-                                let translation = value.translation.height
-                                draggedHeight = translation
-                            }
-                            .onEnded { value in
-                                isDragging = false
-                                let velocity = value.predictedEndTranslation.height - value.translation.height
-                                handleDragEnd(
-                                    translation: value.translation.height,
-                                    velocity: velocity,
-                                    in: geometry
-                                )
-                                draggedHeight = 0
-                            }
-                    )
-                
-                content
-                    .frame(maxWidth: .infinity)
-            }
-            .frame(maxHeight: .infinity)
-            .background(Color(.systemBackground))
-            .cornerRadius(FlexSheet.Constants.cornerRadius, corners: [.topLeft, .topRight])
-            .offset(y: geometry.size.height - currentStyle.height(for: geometry.size.height) + draggedHeight)
-            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: currentStyle)
-            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: draggedHeight)
-        }
-        .ignoresSafeArea()
     }
     
     private func getClosestSnapPoint(to offset: CGFloat, in geometry: GeometryProxy) -> BottomSheetStyle {
@@ -75,6 +40,62 @@ public struct FlexibleBottomSheet<Content: View>: View {
         return distances.min(by: { $0.0 < $1.0 })?.1 ?? .half
     }
     
+    public var body: some View {
+        GeometryReader { geometry in
+            VStack(spacing: 0) {
+                VStack(spacing: 0) {
+                    Color.clear
+                        .frame(height: 40)
+                        .contentShape(Rectangle())
+                        .gesture(
+                            DragGesture()
+                                .onChanged { value in
+                                    isDraggingHeader = true
+                                    let translation = value.translation.height
+                                    draggedHeight = translation
+                                }
+                                .onEnded { value in
+                                    isDraggingHeader = false
+                                    let velocity = value.predictedEndTranslation.height - value.translation.height
+                                    handleDragEnd(
+                                        translation: value.translation.height,
+                                        velocity: velocity,
+                                        in: geometry
+                                    )
+                                    draggedHeight = 0
+                                }
+                        )
+                    
+                    content
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .frame(maxHeight: .infinity)
+            .background(Color(.systemBackground))
+            .cornerRadius(FlexSheet.Constants.cornerRadius, corners: [.topLeft, .topRight])
+            .offset(y: geometry.size.height - currentStyle.height(for: geometry.size.height) + draggedHeight)
+            .gesture(
+                DragGesture()
+                    .onChanged { value in
+                        let translation = value.translation.height
+                        draggedHeight = translation
+                    }
+                    .onEnded { value in
+                        let velocity = value.predictedEndTranslation.height - value.translation.height
+                        handleDragEnd(
+                            translation: value.translation.height,
+                            velocity: velocity,
+                            in: geometry
+                        )
+                        draggedHeight = 0
+                    }
+            )
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: currentStyle)
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: draggedHeight)
+        }
+        .ignoresSafeArea()
+    }
+    
     private func handleDragEnd(translation: CGFloat, velocity: CGFloat, in geometry: GeometryProxy) {
         if abs(velocity) > sheetStyle.dragSensitivity {
             handleVelocityBasedSnap(velocity: velocity)
@@ -86,7 +107,7 @@ public struct FlexibleBottomSheet<Content: View>: View {
     }
     
     private func handleVelocityBasedSnap(velocity: CGFloat) {
-        if velocity > 0 {
+        if velocity > 0 {  // 아래로 드래그
             switch currentStyle {
             case .full:
                 currentStyle = .half
@@ -99,7 +120,7 @@ public struct FlexibleBottomSheet<Content: View>: View {
             case .notShow:
                 break
             }
-        } else {
+        } else {  // 위로 드래그
             switch currentStyle {
             case .notShow:
                 currentStyle = .minimal
@@ -113,7 +134,6 @@ public struct FlexibleBottomSheet<Content: View>: View {
         }
     }
 }
-
 @MainActor
 private struct ScrollOffsetPreferenceKey: @preconcurrency PreferenceKey {
     static var defaultValue: CGFloat = 0
