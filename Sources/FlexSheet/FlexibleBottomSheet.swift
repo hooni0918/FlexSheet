@@ -42,23 +42,28 @@ public struct FlexibleBottomSheet<Content: View>: View {
     public var body: some View {
         GeometryReader { geometry in
             VStack(spacing: 0) {
-                content
-                    .frame(maxWidth: .infinity)
-                    .gesture(
-                        DragGesture()
-                            .onChanged { value in
-                                isDraggingHeader = true
-                                let translation = value.translation.height
-                                draggedHeight = (currentStyle == .full && translation < 0) ? 0 : translation
+                // 스크롤 영역
+                ScrollViewReader { proxy in
+                    ScrollView(showsIndicators: false) {
+                        VStack(spacing: 0) {
+                            GeometryReader { scrollGeometry in
+                                Color.clear.preference(
+                                    key: ScrollOffsetPreferenceKey.self,
+                                    value: scrollGeometry.frame(in: .named("scroll")).minY
+                                )
                             }
-                            .onEnded { value in
-                                isDraggingHeader = false
-                                handleDragEnd(translation: value.translation.height,
-                                            velocity: value.predictedEndTranslation.height - value.translation.height,
-                                            in: geometry)
-                                draggedHeight = 0
-                            }
-                    )
+                            .frame(height: 0)
+                            
+                            content
+                                .frame(maxWidth: .infinity)
+                        }
+                    }
+                    .coordinateSpace(name: "scroll")
+                    .onPreferenceChange(ScrollOffsetPreferenceKey.self) { offset in
+                        handleScrollOffset(offset, in: geometry)
+                    }
+                }
+                .disabled(isDraggingHeader)
             }
             .frame(maxHeight: .infinity)
             .background(Color(.systemBackground))
