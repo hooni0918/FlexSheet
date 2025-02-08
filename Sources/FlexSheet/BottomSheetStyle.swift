@@ -17,7 +17,7 @@ public enum BottomSheetStyle: Equatable {
     public func height(for screenHeight: CGFloat) -> CGFloat {
         let itemHeight: CGFloat = 120
         let headerHeight: CGFloat = 60
-        let additionalHeight: CGFloat = 80
+        let additionalHeight: CGFloat = 84
         
         switch self {
         case .full:
