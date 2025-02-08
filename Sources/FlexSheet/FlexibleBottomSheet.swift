@@ -40,20 +40,40 @@ public struct FlexibleBottomSheet<Content: View>: View {
     }
     
     public var body: some View {
-           GeometryReader { geometry in
-               VStack(spacing: 0) {
-                   content
-                       .frame(maxWidth: .infinity)
-               }
-               .frame(maxHeight: .infinity)
-               .background(Color(.systemBackground))
-               .cornerRadius(FlexSheet.Constants.cornerRadius, corners: [.topLeft, .topRight])
-               .offset(y: geometry.size.height - currentStyle.height(for: geometry.size.height) + draggedHeight)
-               .animation(.spring(response: 0.3, dampingFraction: 0.7), value: currentStyle)
-               .animation(.spring(response: 0.3, dampingFraction: 0.7), value: draggedHeight)
-           }
-           .ignoresSafeArea()
-       }
+        GeometryReader { geometry in
+            VStack(spacing: 0) {
+                Color.clear
+                    .frame(height: FlexSheet.Constants.handleBarHeight)
+                    .contentShape(Rectangle())
+                    .gesture(
+                        DragGesture()
+                            .onChanged { value in
+                                isDraggingHeader = true
+                                draggedHeight = value.translation.height
+                            }
+                            .onEnded { value in
+                                isDraggingHeader = false
+                                handleDragEnd(
+                                    translation: value.translation.height,
+                                    velocity: value.predictedEndTranslation.height - value.translation.height,
+                                    in: geometry
+                                )
+                                draggedHeight = 0
+                            }
+                    )
+                
+                content
+                    .frame(maxWidth: .infinity)
+            }
+            .frame(maxHeight: .infinity)
+            .background(Color(.systemBackground))
+            .cornerRadius(FlexSheet.Constants.cornerRadius, corners: [.topLeft, .topRight])
+            .offset(y: geometry.size.height - currentStyle.height(for: geometry.size.height) + draggedHeight)
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: currentStyle)
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: draggedHeight)
+        }
+        .ignoresSafeArea()
+    }
     
     private func handleScrollOffset(_ offset: CGFloat, in geometry: GeometryProxy) {
         let scrollDirection = offset - lastContentOffset
