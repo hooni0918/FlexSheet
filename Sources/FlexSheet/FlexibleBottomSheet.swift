@@ -24,6 +24,14 @@ public struct FlexibleBottomSheet<Content: View>: View {
         self.content = content()
     }
     
+    private func getSafeAreaInsets() -> UIEdgeInsets {
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first else {
+            return .zero
+        }
+        return window.safeAreaInsets
+    }
+    
     private func getClosestSnapPoint(to offset: CGFloat, in geometry: GeometryProxy) -> BottomSheetStyle {
         let screenHeight = geometry.size.height
         let currentHeight = screenHeight - offset
@@ -39,17 +47,18 @@ public struct FlexibleBottomSheet<Content: View>: View {
     
     public var body: some View {
         GeometryReader { geometry in
-            let window = UIApplication.shared.windows.first
-            let bottomPadding = window?.safeAreaInsets.bottom ?? 0
-            let tabBarHeight: CGFloat = 49 + bottomPadding
             
-            VStack(spacing: 0) {
+            ZStack(alignment: .top) {
+                Color(.systemBackground)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                
                 content
+                    .frame(maxWidth: .infinity)
             }
-            .frame(maxWidth: .infinity)
-            .frame(height: currentStyle.height(for: geometry.size.height))
-            .background(Color(.systemBackground))
+            .frame(maxHeight: .infinity)
             .cornerRadius(FlexSheet.Constants.cornerRadius, corners: [.topLeft, .topRight])
+            .frame(height: max(currentStyle.height(for: geometry.size.height),
+                             geometry.size.height - calculateOffset(for: geometry.size.height)))
             .offset(y: calculateOffset(for: geometry.size.height))
             .gesture(
                 DragGesture()
@@ -73,14 +82,6 @@ public struct FlexibleBottomSheet<Content: View>: View {
         .ignoresSafeArea()
     }
     
-    private func getSafeAreaInsets() -> UIEdgeInsets {
-        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let window = windowScene.windows.first else {
-            return .zero
-        }
-        return window.safeAreaInsets
-    }
-
     private func calculateOffset(for screenHeight: CGFloat) -> CGFloat {
         let additionalHeight: CGFloat = 84
         
