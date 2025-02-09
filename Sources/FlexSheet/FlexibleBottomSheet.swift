@@ -13,9 +13,6 @@ public struct FlexibleBottomSheet<Content: View>: View {
     @Binding private var currentStyle: BottomSheetStyle
     @State private var draggedHeight: CGFloat = 0
     @State private var isDraggingHeader: Bool = false
-    @State private var scrollOffset: CGFloat = 0
-    @State private var lastContentOffset: CGFloat = 0
-    @State private var isExpanding: Bool = false
     
     public init(
         currentStyle: Binding<BottomSheetStyle>,
@@ -32,6 +29,7 @@ public struct FlexibleBottomSheet<Content: View>: View {
         let currentHeight = screenHeight - offset
         
         let distances = [
+            (abs(currentHeight - BottomSheetStyle.minimal.height(for: screenHeight)), BottomSheetStyle.minimal),
             (abs(currentHeight - BottomSheetStyle.half.height(for: screenHeight)), BottomSheetStyle.half),
             (abs(currentHeight - BottomSheetStyle.full.height(for: screenHeight)), BottomSheetStyle.full)
         ]
@@ -42,10 +40,11 @@ public struct FlexibleBottomSheet<Content: View>: View {
     public var body: some View {
         GeometryReader { geometry in
             VStack(spacing: 0) {
+                // Header와 Content를 분리
                 content
                     .frame(maxWidth: .infinity)
+                    .frame(height: currentStyle.height(for: geometry.size.height))
             }
-            .frame(maxHeight: .infinity)
             .background(Color(.systemBackground))
             .cornerRadius(FlexSheet.Constants.cornerRadius, corners: [.topLeft, .topRight])
             .offset(y: geometry.size.height - currentStyle.height(for: geometry.size.height) + draggedHeight)
@@ -69,26 +68,6 @@ public struct FlexibleBottomSheet<Content: View>: View {
             .animation(.spring(response: 0.3, dampingFraction: 0.7), value: draggedHeight)
         }
         .ignoresSafeArea()
-    }
-    
-    private func handleScrollOffset(_ offset: CGFloat, in geometry: GeometryProxy) {
-        let scrollDirection = offset - lastContentOffset
-        
-        if currentStyle == .half && scrollDirection < -20 && !isExpanding {
-            isExpanding = true
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                currentStyle = .full
-            }
-        }
-        else if currentStyle == .full && offset > 20 {
-            isExpanding = false
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                currentStyle = .half
-            }
-        }
-        
-        lastContentOffset = offset
-        scrollOffset = offset
     }
     
     private func handleDragEnd(translation: CGFloat, velocity: CGFloat, in geometry: GeometryProxy) {
@@ -129,6 +108,7 @@ public struct FlexibleBottomSheet<Content: View>: View {
         }
     }
 }
+
 
 @MainActor
 private struct ScrollOffsetPreferenceKey: @preconcurrency PreferenceKey {
