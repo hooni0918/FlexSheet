@@ -7,6 +7,7 @@
 //
 import Foundation
 
+@MainActor
 @frozen
 public enum BottomSheetStyle: Equatable {
     case full
@@ -15,9 +16,12 @@ public enum BottomSheetStyle: Equatable {
     case notShow
     
     public func height(for screenHeight: CGFloat) -> CGFloat {
-        let itemHeight: CGFloat = 120
-        let headerHeight: CGFloat = 60
-        let additionalHeight: CGFloat = 84
+        let itemHeight: CGFloat = 120.adjusted
+                let headerHeight: CGFloat = 60.adjustedH
+                let tabBarHeight: CGFloat = 49.adjustedH
+                let safeAreaBottom: CGFloat = 34.adjustedH
+                let additionalHeight: CGFloat = (tabBarHeight + safeAreaBottom).adjustedH
+                
         
         switch self {
         case .full:
