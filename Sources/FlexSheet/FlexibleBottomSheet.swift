@@ -39,15 +39,18 @@ public struct FlexibleBottomSheet<Content: View>: View {
     
     public var body: some View {
         GeometryReader { geometry in
+            let window = UIApplication.shared.windows.first
+            let bottomPadding = window?.safeAreaInsets.bottom ?? 0
+            let tabBarHeight: CGFloat = 49 + bottomPadding
+            
             VStack(spacing: 0) {
-                // Header와 Content를 분리
                 content
                     .frame(maxWidth: .infinity)
                     .frame(height: currentStyle.height(for: geometry.size.height))
             }
             .background(Color(.systemBackground))
             .cornerRadius(FlexSheet.Constants.cornerRadius, corners: [.topLeft, .topRight])
-            .offset(y: geometry.size.height - currentStyle.height(for: geometry.size.height) + draggedHeight)
+            .offset(y: calculateOffset(for: geometry.size.height, tabBarHeight: tabBarHeight))
             .gesture(
                 DragGesture()
                     .onChanged { value in
@@ -68,6 +71,16 @@ public struct FlexibleBottomSheet<Content: View>: View {
             .animation(.spring(response: 0.3, dampingFraction: 0.7), value: draggedHeight)
         }
         .ignoresSafeArea()
+    }
+    
+    private func calculateOffset(for screenHeight: CGFloat, tabBarHeight: CGFloat) -> CGFloat {
+        let baseOffset = screenHeight - currentStyle.height(for: screenHeight)
+        
+        if currentStyle == .minimal {
+            return baseOffset + draggedHeight
+        } else {
+            return baseOffset + draggedHeight
+        }
     }
     
     private func handleDragEnd(translation: CGFloat, velocity: CGFloat, in geometry: GeometryProxy) {
@@ -108,7 +121,6 @@ public struct FlexibleBottomSheet<Content: View>: View {
         }
     }
 }
-
 
 @MainActor
 private struct ScrollOffsetPreferenceKey: @preconcurrency PreferenceKey {
