@@ -73,9 +73,25 @@ public struct FlexibleBottomSheet<Content: View>: View {
         .ignoresSafeArea()
     }
     
+    private func getSafeAreaInsets() -> UIEdgeInsets {
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first else {
+            return .zero
+        }
+        return window.safeAreaInsets
+    }
+
     private func calculateOffset(for screenHeight: CGFloat) -> CGFloat {
+        let additionalHeight: CGFloat = 84
+        
         let sheetHeight = currentStyle.height(for: screenHeight)
-        return screenHeight - sheetHeight + draggedHeight
+        let baseOffset = screenHeight - sheetHeight
+        
+        if currentStyle == .minimal {
+            return baseOffset - additionalHeight + draggedHeight
+        }
+        
+        return baseOffset + draggedHeight
     }
     
     private func handleDragEnd(translation: CGFloat, velocity: CGFloat, in geometry: GeometryProxy) {

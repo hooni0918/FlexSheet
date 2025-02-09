@@ -18,16 +18,14 @@ public enum BottomSheetStyle: Equatable {
         let itemHeight: CGFloat = 120
         let headerHeight: CGFloat = 60
         let additionalHeight: CGFloat = 84
-        let tabBarHeight: CGFloat = 49
-        let safeAreaBottom: CGFloat = 34
         
         switch self {
         case .full:
             return screenHeight * 0.876
         case .half:
-            return (itemHeight * 2) + headerHeight + additionalHeight + tabBarHeight
+            return (itemHeight * 2) + headerHeight + additionalHeight
         case .minimal:
-            return headerHeight + additionalHeight + tabBarHeight + safeAreaBottom
+            return headerHeight 
         case .notShow:
             return 0
         }
