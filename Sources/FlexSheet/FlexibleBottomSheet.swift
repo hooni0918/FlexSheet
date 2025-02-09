@@ -13,9 +13,6 @@ public struct FlexibleBottomSheet<Content: View>: View {
     @Binding private var currentStyle: BottomSheetStyle
     @State private var draggedHeight: CGFloat = 0
     @State private var isDraggingHeader: Bool = false
-    @State private var scrollOffset: CGFloat = 0
-    @State private var lastContentOffset: CGFloat = 0
-    @State private var isExpanding: Bool = false
     
     public init(
         currentStyle: Binding<BottomSheetStyle>,
@@ -50,26 +47,13 @@ public struct FlexibleBottomSheet<Content: View>: View {
     
     public var body: some View {
         GeometryReader { geometry in
+            
             ZStack(alignment: .top) {
                 Color(.systemBackground)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 
-                ScrollView {
-                    GeometryReader { proxy in
-                        Color.clear.preference(
-                            key: ScrollOffsetPreferenceKey.self,
-                            value: proxy.frame(in: .named("scroll")).minY
-                        )
-                    }
-                    .frame(height: 0)
-                    
-                    content
-                        .frame(maxWidth: .infinity)
-                }
-                .coordinateSpace(name: "scroll")
-                .onPreferenceChange(ScrollOffsetPreferenceKey.self) { offset in
-                    handleScrollOffset(offset, in: geometry)
-                }
+                content
+                    .frame(maxWidth: .infinity)
             }
             .frame(maxHeight: .infinity)
             .cornerRadius(FlexSheet.Constants.cornerRadius, corners: [.topLeft, .topRight])
@@ -79,12 +63,10 @@ public struct FlexibleBottomSheet<Content: View>: View {
             .gesture(
                 DragGesture()
                     .onChanged { value in
-                        isDraggingHeader = true
                         let translation = value.translation.height
                         draggedHeight = translation
                     }
                     .onEnded { value in
-                        isDraggingHeader = false
                         let velocity = value.predictedEndTranslation.height - value.translation.height
                         handleDragEnd(
                             translation: value.translation.height,
@@ -98,21 +80,6 @@ public struct FlexibleBottomSheet<Content: View>: View {
             .animation(.spring(response: 0.3, dampingFraction: 0.7), value: draggedHeight)
         }
         .ignoresSafeArea()
-    }
-    
-    private func handleScrollOffset(_ offset: CGFloat, in geometry: GeometryProxy) {
-        if isDraggingHeader { return }
-        
-        let scrollDirection = offset - lastContentOffset
-        
-        if currentStyle == .full && offset >= 0 && scrollDirection > 0 {
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                currentStyle = .half
-            }
-        }
-        
-        lastContentOffset = offset
-        scrollOffset = offset
     }
     
     private func calculateOffset(for screenHeight: CGFloat) -> CGFloat {
