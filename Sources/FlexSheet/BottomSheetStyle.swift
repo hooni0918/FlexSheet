@@ -27,7 +27,7 @@ public enum BottomSheetStyle: Equatable {
         case .half:
             return (itemHeight * 2) + headerHeight + additionalHeight + tabBarHeight
         case .minimal:
-            return headerHeight
+            return headerHeight + additionalHeight + tabBarHeight + safeAreaBottom
         case .notShow:
             return 0
         }

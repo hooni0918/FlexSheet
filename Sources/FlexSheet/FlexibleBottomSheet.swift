@@ -45,12 +45,12 @@ public struct FlexibleBottomSheet<Content: View>: View {
             
             VStack(spacing: 0) {
                 content
-                    .frame(maxWidth: .infinity)
-                    .frame(height: currentStyle.height(for: geometry.size.height))
             }
+            .frame(maxWidth: .infinity)
+            .frame(height: currentStyle.height(for: geometry.size.height))
             .background(Color(.systemBackground))
             .cornerRadius(FlexSheet.Constants.cornerRadius, corners: [.topLeft, .topRight])
-            .offset(y: calculateOffset(for: geometry.size.height, tabBarHeight: tabBarHeight))
+            .offset(y: calculateOffset(for: geometry.size.height))
             .gesture(
                 DragGesture()
                     .onChanged { value in
@@ -73,14 +73,9 @@ public struct FlexibleBottomSheet<Content: View>: View {
         .ignoresSafeArea()
     }
     
-    private func calculateOffset(for screenHeight: CGFloat, tabBarHeight: CGFloat) -> CGFloat {
-        let baseOffset = screenHeight - currentStyle.height(for: screenHeight)
-        
-        if currentStyle == .minimal {
-            return baseOffset + draggedHeight
-        } else {
-            return baseOffset + draggedHeight
-        }
+    private func calculateOffset(for screenHeight: CGFloat) -> CGFloat {
+        let sheetHeight = currentStyle.height(for: screenHeight)
+        return screenHeight - sheetHeight + draggedHeight
     }
     
     private func handleDragEnd(translation: CGFloat, velocity: CGFloat, in geometry: GeometryProxy) {
