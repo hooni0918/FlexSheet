@@ -45,7 +45,7 @@ https://github.com/hooni0918/FlexSheet.git
 Or add it through Xcode:
 1. File > Add Packages
 2. Enter package URL: `https://github.com/hooni0918/FlexSheet.git`
-3. Select version: 1.0.0 or higher
+3. Select version: 1.2.21 or higher
 
 ## Usage
 
@@ -150,3 +150,5 @@ Ji-hoon Lee (이지훈)
 ## Support
 
 If you have any questions or need help, please open an issue on GitHub.
+
+[![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Fhooni0918%2FFlexSheet&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://hits.seeyoufarm.com)
